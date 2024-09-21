@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Localisation d'Arrêts de Taxi et de Bus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/flowbite@1.5.3/dist/flowbite.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="flex flex-col h-screen bg-gray-200 lg:flex-row">
+      <!-- Sidebar for large screens -->
+      <aside class="hidden lg:block w-64 bg-gray-800 text-white p-6">
+        <h1 class="text-2xl font-bold mb-8">Vos arrêts</h1>
+        <nav>
+          <ul>
+            <li class="mb-4">
+              <a
+                href="{% url 'stop_list' %}"
+                class="flex items-center text-gray-300 hover:text-white"
+              >
+                <svg
+                  class="w-6 h-6 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  ></path>
+                </svg>
+                Accueil
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Burger menu for small screens -->
+      <div class="lg:hidden bg-gray-800 p-4">
+        <div class="flex justify-between items-center">
+          <h1 class="text-2xl font-bold text-white">Vos arrêts</h1>
+          <button
+            data-collapse-toggle="mobile-menu"
+            type="button"
+            class="inline-flex items-center p-2 ml-3 text-sm text-gray-500 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200"
+            aria-controls="mobile-menu"
+            aria-expanded="false"
+          >
+            <span class="sr-only">Open main menu</span>
+            <svg
+              class="w-6 h-6"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile menu -->
+      <div class="hidden w-full lg:hidden bg-gray-800" id="mobile-menu">
+        <ul class="flex flex-col px-4 py-2">
+          <li class="py-2">
+            <a
+              href="{% url 'stop_list' %}"
+              class="block text-white hover:bg-gray-700 px-3 py-2 rounded-md"
+              >Accueil</a
+            >
+          </li>
+          <li class="py-2">
+            <a
+              href="#"
+              class="block text-white hover:bg-gray-700 px-3 py-2 rounded-md"
+              >Taxis</a
+            >
+          </li>
+          <li class="py-2">
+            <a
+              href="#"
+              class="block text-white hover:bg-gray-700 px-3 py-2 rounded-md"
+              >Bus</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Search bar -->
+        <div class="w-full bg-gray-800 shadow-md p-4">
+          <form
+            action="{% url 'search_stops' %}"
+            method="GET"
+            class="flex items-center"
+          >
+            <input
+              type="text"
+              name="query"
+              placeholder="Rechercher un arrêt..."
+              class="flex-grow p-2 bg-gray-700 text-white border border-gray-600 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+            />
+            <button
+              type="submit"
+              class="bg-blue-500 text-white p-2 rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- Main content -->
+        <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
+          <header class="bg-white shadow-md rounded-lg p-4 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">
+              {% block header %}Liste des arrêts{% endblock %}
+            </h2>
+          </header>
+
+          <!-- Dynamic content -->
+          <div class="mt-8">{% block content %}{% endblock %}</div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      // Toggle mobile menu
+      const mobileMenuButton = document.querySelector(
+        '[data-collapse-toggle="mobile-menu"]'
+      );
+      const mobileMenu = document.getElementById("mobile-menu");
+
+      mobileMenuButton.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
+      });
+    </script>
+  </body>
+</html>

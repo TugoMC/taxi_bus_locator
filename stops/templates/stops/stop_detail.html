@@ -1,0 +1,48 @@
+{% extends 'base.html' %} {% block content %}
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+  <div class="p-6">
+    <h1 class="text-3xl font-bold mb-4">{{ stop.name }}</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <p class="text-gray-700 mb-2">
+          <span class="font-semibold">Type:</span> {{ stop.stop_type }}
+        </p>
+        <p class="text-gray-700 mb-2">
+          <span class="font-semibold">Commune:</span> {{ stop.commune }}
+        </p>
+        <p class="text-gray-700 mb-2">
+          <span class="font-semibold">Coût:</span> {{ stop.cost }} FCFA
+        </p>
+        <p class="text-gray-700 mb-2">
+          <span class="font-semibold">Horaires:</span> {{ stop.opening_time }} -
+          {{ stop.closing_time }}
+        </p>
+      </div>
+      <div>
+        <p class="text-gray-700 mb-2">
+          <span class="font-semibold">Description:</span>
+        </p>
+        <p class="text-gray-600">{{ stop.description }}</p>
+      </div>
+    </div>
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <p class="font-semibold mb-2">Départ:</p>
+        <img
+          src="{{ stop.start_photo.url }}"
+          alt="Départ"
+          class="w-full h-auto rounded-lg shadow-md"
+        />
+      </div>
+      <div>
+        <p class="font-semibold mb-2">Destination:</p>
+        <img
+          src="{{ stop.end_photo.url }}"
+          alt="Destination"
+          class="w-full h-auto rounded-lg shadow-md"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
