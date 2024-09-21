@@ -18,3 +18,13 @@ class Stop(models.Model):
     
     def __str__(self):
         return self.name
+
+class LigneTrajet(models.Model):
+    stop = models.ForeignKey(Stop, related_name='lignes', on_delete=models.CASCADE)
+    points = models.JSONField()  # Pour stocker les coordonnées des points de la ligne
+    trajet = models.CharField(max_length=100, default= "")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Ligne pour {self.stop.name}"
+

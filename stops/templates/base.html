@@ -7,6 +7,39 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/flowbite@1.5.3/dist/flowbite.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <style>
+      /* Style du bouton Retour en haut */
+      #backToTop {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        display: none; /* Caché par défaut */
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        transition: background-color 0.3s;
+      }
+
+      #backToTop:hover {
+        background-color: #45a049;
+      }
+    </style>
   </head>
   <body class="bg-gray-100">
     <div class="flex flex-col h-screen bg-gray-200 lg:flex-row">
@@ -146,6 +179,9 @@
       </div>
     </div>
 
+    <!-- Bouton Retour en haut -->
+    <button id="backToTop" onclick="scrollToTop()">↑ Retour en haut</button>
+
     <script>
       // Toggle mobile menu
       const mobileMenuButton = document.querySelector(
@@ -156,6 +192,27 @@
       mobileMenuButton.addEventListener("click", () => {
         mobileMenu.classList.toggle("hidden");
       });
+
+      // Fonction pour faire défiler vers le haut
+      function scrollToTop() {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+
+      // Afficher/Cacher le bouton Retour en haut
+      window.onscroll = function () {
+        const backToTopButton = document.getElementById("backToTop");
+        if (
+          document.body.scrollTop > 10 ||
+          document.documentElement.scrollTop > 10
+        ) {
+          backToTopButton.style.display = "block";
+        } else {
+          backToTopButton.style.display = "none";
+        }
+      };
     </script>
   </body>
 </html>

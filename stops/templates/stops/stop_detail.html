@@ -43,6 +43,196 @@
         />
       </div>
     </div>
+
+    <div class="mt-6">
+      <h2 class="text-xl font-bold">Lignes de trajet</h2>
+      <ul>
+        {% for ligne in lignes %}
+        <li></li>
+        {% empty %}
+        <li>Aucune ligne de trajet disponible pour cet arrêt.</li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 </div>
+
+<!-- Bouton pour changer le thème -->
+<div class="mt-4">
+  <label for="themeSwitch" class="font-semibold">Changer le thème :</label>
+  <label class="switch">
+    <input type="checkbox" id="themeSwitch" />
+    <span class="slider"></span>
+  </label>
+</div>
+
+<!-- Carte Leaflet -->
+<div id="map" style="height: 400px; width: 100%; margin-top: 20px"></div>
+
+<!-- Leaflet CSS et JS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css"
+/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+
+<style>
+  .switch {
+    font-size: 17px;
+    position: relative;
+    display: inline-block;
+    width: 64px;
+    height: 34px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #73c0fc;
+    transition: 0.4s;
+    border-radius: 30px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 30px;
+    width: 30px;
+    border-radius: 20px;
+    left: 2px;
+    bottom: 2px;
+    z-index: 2;
+    background-color: #e8e8e8;
+    transition: 0.4s;
+  }
+
+  .switch input:checked + .slider {
+    background-color: #183153;
+  }
+
+  .switch input:focus + .slider {
+    box-shadow: 0 0 1px #183153;
+  }
+
+  .switch input:checked + .slider:before {
+    transform: translateX(30px);
+  }
+</style>
+
+<script>
+    var abidjanLat = 5.3476;
+    var abidjanLng = -4.0244;
+
+    var latitude = {{ stop.latitude|default:"5.3476" }};
+    var longitude = {{ stop.longitude|default:"-4.0244" }};
+
+    var map = L.map('map').setView([latitude, longitude], 13);
+
+    // Couche de tuiles light par défaut
+    var lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Couche de tuiles dark
+    var darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    });
+
+    // Fonction pour changer le thème
+    document.getElementById('themeSwitch').addEventListener('change', function() {
+      if (this.checked) {
+        map.removeLayer(lightLayer);
+        map.addLayer(darkLayer);
+      } else {
+        map.removeLayer(darkLayer);
+        map.addLayer(lightLayer);
+      }
+    });
+
+    {% if user.is_superuser %}
+        var editableLayers = new L.FeatureGroup().addTo(map);
+
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: editableLayers
+            },
+            draw: {
+                polygon: false,
+                polyline: true, // Autoriser le dessin de polylignes
+                rectangle: false,
+                circle: false,
+                marker: false // Les marqueurs sont ajoutés par défaut
+            }
+        });
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var layer = e.layer;
+            editableLayers.addLayer(layer);
+            var points = layer.getLatLngs().map(function(latlng) {
+                return [latlng.lat, latlng.lng];
+            });
+
+            // Envoi des points à la vue pour créer une ligne
+            fetch("{% url 'creer_ligne' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    stop_id: {{ stop.id }},
+                    points: points
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Ligne créée:", data);
+            })
+            .catch(error => console.error("Erreur lors de la création de la ligne:", error));
+        });
+    {% endif %}
+
+    // Dessiner les lignes de trajet sur la carte
+    var lignesTrajet = [
+      {% for ligne in lignes %}
+          {
+              id: {{ ligne.id }},
+              points: {{ ligne.points|safe }},
+              stop_name: "{{ stop.name }}",  // Inclure le nom de l'arrêt
+          },
+      {% endfor %}
+  ];
+
+  lignesTrajet.forEach(function(ligne) {
+      var latlngs = ligne.points.map(function(point) {
+          return [point[0], point[1]];
+      });
+      var polyline = L.polyline(latlngs, { color: 'green' }).addTo(map);
+      polyline.bindPopup('Trajet: ' + ligne.stop_name);  // Afficher le nom de l'arrêt
+  });
+
+    setTimeout(function () {
+      map.invalidateSize();
+    }, 100);
+</script>
 {% endblock %}
