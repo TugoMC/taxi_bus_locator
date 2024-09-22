@@ -4,6 +4,9 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import get_object_or_404
+
 
 def stop_list(request):
     stops = Stop.objects.all()
@@ -22,22 +25,32 @@ def stop_detail(request, pk):
     lignes = stop.lignes.all()  # Récupérer les lignes associées à cet arrêt
     return render(request, 'stops/stop_detail.html', {'stop': stop, 'lignes': lignes, 'user': request.user})
 
+
 @csrf_exempt
 def creer_ligne(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        trajet_id = data.get('stop_id')
-        points = data.get('points')
-        debut_nom = data.get('debut_nom', "Début")
-        fin_nom = data.get('fin_nom', "Fin")
-
-        stop = Stop.objects.get(id=trajet_id)
-        ligne = LigneTrajet.objects.create(
-            stop=stop,
-            points=points,
-            debut_nom=debut_nom,
-            fin_nom=fin_nom
-        )
-        
-        return JsonResponse({'id': ligne.id, 'stop_id': stop.id, 'points': points, 'debut_nom': debut_nom, 'fin_nom': fin_nom})
+        try:
+            data = json.loads(request.body)
+            trajet_id = data.get('stop_id')
+            points = data.get('points')
+            stop = Stop.objects.get(id=trajet_id)
+            
+            ligne = LigneTrajet.objects.create(
+                stop=stop,
+                points=points
+            )
+            
+            return JsonResponse({'id': ligne.id, 'stop_id': stop.id, 'points': points})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def delete_ligne(request, ligne_id):
+    if request.method == 'POST':
+        ligne = get_object_or_404(LigneTrajet, id=ligne_id)
+        ligne.delete()  # Supprimer la ligne
+        return JsonResponse({'status': 'success', 'message': 'Ligne supprimée avec succès.'})
+    
+    return JsonResponse({'error': 'Requête non valide.'}, status=400)

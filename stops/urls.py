@@ -6,4 +6,5 @@ urlpatterns = [
     path('stop/<int:pk>/', views.stop_detail, name='stop_detail'),
     path('search/', views.search_stops, name='search_stops'),
     path('creer-ligne/', views.creer_ligne, name='creer_ligne'),
+    path('delete-ligne/<int:ligne_id>/', views.delete_ligne, name='delete_ligne'),
 ]

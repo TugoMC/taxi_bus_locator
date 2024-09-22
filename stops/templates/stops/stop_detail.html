@@ -46,8 +46,15 @@
 
     <div class="mt-6">
       <ul>
-        {% for ligne in lignes %}
-        <li></li>
+        {% for ligne in lignes %} {% if user.is_superuser %}
+        <li>
+          Trajet: {{ ligne.trajet }} - Points: {{ ligne.points }} {% if
+          user.is_superuser %}
+          <button class="delete-ligne-btn" data-ligne-id="{{ ligne.id }}">
+            Supprimer
+          </button>
+          {% endif %}
+        </li>
         {% empty %}
         <li>Aucune ligne de trajet disponible pour cet arrêt.</li>
         {% endfor %}
@@ -234,4 +241,36 @@
       map.invalidateSize();
     }, 100);
 </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const deleteButtons = document.querySelectorAll(".delete-ligne-btn");
+
+    deleteButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        const ligneId = this.getAttribute("data-ligne-id");
+
+        if (confirm("Voulez-vous vraiment supprimer cette ligne ?")) {
+          fetch(`/delete-ligne/${ligneId}/`, {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": "{{ csrf_token }}", // Protection CSRF
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "success") {
+                alert(data.message);
+                location.reload(); // Recharger la page après suppression
+              } else {
+                alert("Erreur lors de la suppression.");
+              }
+            })
+            .catch((error) => console.error("Erreur:", error));
+        }
+      });
+    });
+  });
+</script>
+
 {% endblock %}
